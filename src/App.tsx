@@ -3,7 +3,7 @@ import { createSignal, createMemo } from "solid-js";
 import Triangle from "./components/Triangle";
 
 const App: Component = () => {
-  const [inputText, setInputText] = createSignal("");
+  const [inputText, setInputText] = createSignal("SEXI");
 
   const lines = createMemo(() => {
     const word = inputText().trim().split(" ")[0];
@@ -32,13 +32,13 @@ const App: Component = () => {
     <div class="p-8 flex flex-col h-dvh">
       <input onInput={(e) => setInputText(e.target.value)} value={inputText()} class="input input-neutral mb-8" />
       <div class="grow">
-      <div class="flex gap-4 items-end. flex-wrap mb-16">
+      <div class="flex gap-x-4 gap-y-8 flex-wrap mb-16 tracking-widest">
         <For each={triangleStages()}>
           {(stageLines) => <Triangle lines={stageLines} />}
         </For>
       </div>
       </div>
-      <p class="w-full flex justify-center">Sponsored by softwarehouse RenčiČa</p>
+      {/*<p class="w-full flex justify-center">Sponsored by softwarehouse RenčiČa</p>*/}
     </div>
   );
 };
