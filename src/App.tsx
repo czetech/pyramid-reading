@@ -143,7 +143,12 @@ const App: Component = () => {
       </button>
       </div>
       <div class="overflow-x-auto w-full grow">
-        <svg ref={svgRef} width={getWidth(Math.min(lineCount(), 5))} height={lineCount() > 5 ? getTriangleHeight(5) + getTriangleHeight(lineCount()) + 64 : getTriangleHeight(lineCount())}>
+        <svg ref={svgRef} viewBox={`0 0 ${getWidth(Math.min(lineCount(), 5))} ${lineCount() > 5 ? getTriangleHeight(5) + getTriangleHeight(lineCount()) + 64 : getTriangleHeight(lineCount())}`}
+          class="w-full h-full"
+          style={{
+            'max-width': `${getWidth(Math.min(lineCount(), 5))}px`,
+            'max-height': `${lineCount() > 5 ? getTriangleHeight(5) + getTriangleHeight(lineCount()) + 64 : getTriangleHeight(lineCount())}px`
+          }}>
           <For each={triangleStages().slice(0, 5)}>
             {(stageLines, stageIndex) => <Triangle lines={stageLines} x={getWidth(stageIndex()) + Math.min(stageIndex(), 1) * 16} />}
           </For>
