@@ -3,7 +3,7 @@ import { createSignal, createMemo } from "solid-js";
 import Triangle from "./components/Triangle";
 
 const App: Component = () => {
-  const [inputText, setInputText] = createSignal("SEXI");
+  const [inputText, setInputText] = createSignal("");
 
   const lines = createMemo(() => {
     const word = inputText().trim().split(" ")[0];
