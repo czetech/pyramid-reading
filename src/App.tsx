@@ -12,7 +12,7 @@ const App: Component = () => {
       return [];
     }
 
-    const result = [[{text: word[0]}]];
+    const result = [[{text: word[0], fill: "red"}]];
     let currentCombined = word[0];
     for (let i = 1; i < word.length; i++) {
       const nextChar = word[i];
