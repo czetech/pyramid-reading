@@ -17,6 +17,7 @@ export default function Triangle(props) {
       viewBox={`-1 -1 ${width() + 2} ${height() + 2}`}
       x={props.x}
       y={props.y}
+      style={{"font-family": "Roboto Condensed", "letter-spacing": "0.1em"}}
     >
       <polygon
         points={vertices()}

@@ -2,6 +2,7 @@ import type { Component } from 'solid-js';
 import { createSignal, createMemo, onMount, createEffect } from "solid-js";
 import Triangle from "./components/Triangle";
 import {triangleFontSize, triangleTopVertexOffset, getTriangleWidth, getTriangleHeight} from "/src/lib/triangle.ts";
+import { toPng } from 'html-to-image';
 
 const App: Component = () => {
   let svgRef;
@@ -45,34 +46,66 @@ const App: Component = () => {
     return widthSum;
   };
 
-  const downloadSVG = (format) => {
+  const downloadSVG = async (format) => {
     setDownloading(true);
-    const serializer = new XMLSerializer();
-    const svgString = serializer.serializeToString(svgRef);
 
-    if (format === 'svg') {
-      const blob = new Blob([svgString], { type: "image/svg+xml" });
-      const url = URL.createObjectURL(blob);
-      triggerDownload(url, 'image.svg');
-      URL.revokeObjectURL(url);
+    try {
+      // Fetch the font file and convert it to a base64 data URL
+      const fontUrl = 'https://fonts.gstatic.com/s/robotocondensed/v25/ieVi2ZhZI2eCN5jzbjEETS9weq8-33mZKCMSbvNdgg.woff2';
+      const response = await fetch(fontUrl);
+      const blob = await response.blob();
+      const reader = new FileReader();
+      const dataUrl = await new Promise(resolve => {
+        reader.onload = () => resolve(reader.result);
+        reader.readAsDataURL(blob);
+      });
+
+      // Create a style element with the font-face and other styles
+      const style = document.createElementNS('http://www.w3.org/2000/svg', 'style');
+      style.textContent = `
+        @font-face {
+          font-family: 'Roboto Condensed';
+          src: url(${dataUrl}) format('woff2');
+        }
+        text {
+          font-family: 'Roboto Condensed', sans-serif;
+          letter-spacing: 0.05em;
+        }
+      `;
+
+      // Prepend the style to the SVG
+      svgRef.prepend(style);
+
+      const serializer = new XMLSerializer();
+      let svgString = serializer.serializeToString(svgRef);
+
+      // Remove the style element after serialization to not affect the displayed SVG
+      style.remove();
+
+      if (format === 'svg') {
+        const blob = new Blob([svgString], { type: "image/svg+xml" });
+        const url = URL.createObjectURL(blob);
+        triggerDownload(url, 'image.svg');
+        URL.revokeObjectURL(url);
+      } else {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        const img = new Image();
+
+        img.onload = () => {
+          canvas.width = img.width;
+          canvas.height = img.height;
+          ctx.drawImage(img, 0, 0);
+          const dataUrl = canvas.toDataURL(`image/${format}`);
+          triggerDownload(dataUrl, `pyramid-${inputText()}.${format}`);
+        };
+        img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgString)));
+      }
+    } catch (error) {
+      console.error('Failed to download SVG:', error);
+    } finally {
       setDownloading(false);
-      return;
     }
-
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
-    const img = new Image();
-
-    img.onload = () => {
-      canvas.width = img.width;
-      canvas.height = img.height;
-      ctx.drawImage(img, 0, 0);
-      const dataUrl = canvas.toDataURL(`image/${format}`);
-      triggerDownload(dataUrl, `image.${format}`);
-      setDownloading(false);
-    };
-
-    img.src = "data:image/svg+xml;base64," + btoa(svgString);
   };
 
   const triggerDownload = (url, filename) => {
@@ -109,7 +142,7 @@ const App: Component = () => {
         {downloading() ? 'Downloading...' : 'Download as PNG'}
       </button>
       </div>
-      <div class="tracking-widest overflow-x-auto w-full grow">
+      <div class="overflow-x-auto w-full grow">
         <svg ref={svgRef} width={getWidth(lineCount())} height={getTriangleHeight(lineCount())}>
           <For each={triangleStages()}>
             {(stageLines, stageIndex) => <Triangle lines={stageLines} x={getWidth(stageIndex()) + Math.min(stageIndex(), 1) * 16} />}
