@@ -50,6 +50,26 @@ const App: Component = () => {
     setDownloading(true);
 
     try {
+      // --- START: NEW CODE ---
+      // 1. Calculate the actual, unscaled dimensions from your reactive properties.
+      const svgWidth = getWidth(Math.min(lineCount(), 5));
+      const svgHeight = lineCount() > 5 
+        ? getTriangleHeight(5) + getTriangleHeight(lineCount()) + 64 
+        : getTriangleHeight(lineCount());
+      
+      // 2. Clone the SVG element to avoid changing the one on screen.
+      const svgClone = svgRef.cloneNode(true);
+
+      // 3. Set the explicit width and height on the clone.
+      //    This is the key step for the rasterizer.
+      svgClone.setAttribute('width', svgWidth);
+      svgClone.setAttribute('height', svgHeight);
+
+      // 4. Remove classes and styles that might interfere with rendering.
+      svgClone.removeAttribute('class');
+      svgClone.removeAttribute('style');
+      // --- END: NEW CODE ---
+
       // Fetch the font file and convert it to a base64 data URL
       const fontUrl = 'https://fonts.gstatic.com/s/robotocondensed/v25/ieVi2ZhZI2eCN5jzbjEETS9weq8-33mZKCMSbvNdgg.woff2';
       const response = await fetch(fontUrl);
@@ -74,13 +94,12 @@ const App: Component = () => {
       `;
 
       // Prepend the style to the SVG
-      svgRef.prepend(style);
+      svgClone.prepend(style);
 
       const serializer = new XMLSerializer();
-      let svgString = serializer.serializeToString(svgRef);
+      let svgString = serializer.serializeToString(svgClone);
 
       // Remove the style element after serialization to not affect the displayed SVG
-      style.remove();
 
       if (format === 'svg') {
         const blob = new Blob([svgString], { type: "image/svg+xml" });
