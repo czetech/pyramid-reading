@@ -10,7 +10,7 @@ image:
   repository: ghcr.io/czetech/pyramid-reading
 
   # -- Image tag
-  tag: latest
+  tag: ""
 
   # -- [Image pull policy][k8s-imagepull] (imagePullPolicy of a container)
   pullPolicy: IfNotPresent
