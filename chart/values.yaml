@@ -7,7 +7,7 @@ fullnameOverride: ""
 image:
 
   # -- Image repository
-  repository: registry.gitlab.com/czetech/herbysteam-site/main
+  repository: ghcr.io/czetech/pyramid-reading
 
   # -- Image tag
   tag: latest
