@@ -1,0 +1,18 @@
+{{- if .Values.httpRoute.enabled -}}
+kind: HTTPRoute
+apiVersion: gateway.networking.k8s.io/v1beta1
+metadata:
+  name: {{ include "gluon-dashboard.fullname" . }}
+spec:
+  parentRefs:
+  - namespace: kube-system
+    name: external-http
+  hostnames:
+  {{- range .Values.httpRoute.hostnames }}
+  - {{ toYaml . }}
+  {{- end }}
+  rules:
+  - backendRefs:
+    - name: {{ include "gluon-dashboard.fullname" . }}-http
+      port: 80
+{{- end }}
