@@ -20,9 +20,9 @@ export default function Triangle(props) {
     >
       <polygon
         points={points()}
-        fill="none"
         stroke-width="2"
-        class="stroke-fuchsia-800 fill-fuchsia-100"
+        stroke="#0052d5"
+        fill="#e0ebff"
       />
 
       <For each={props.lines}>
@@ -51,7 +51,7 @@ export default function Triangle(props) {
                   x2={lineEndX()}
                   y2={lineY()}
                   stroke-width="2"
-                  class="stroke-fuchsia-800"
+                  stroke="#0052d5"
                 />
               )}
 
@@ -61,11 +61,12 @@ export default function Triangle(props) {
                 y={textY()}
                 text-anchor="middle"
                 dominant-baseline="middle"
-                font-family="Arial, sans-serif"
                 font-size={FONT_SIZE}
                 font-weight="bold"
               >
-                {lineText}
+                <For each={lineText}>
+                {({text, fill}) => <tspan fill={index() + 1 === props.lines.length ? fill : null}>{text}</tspan>}
+                </For>
               </text>
             </>
           );
