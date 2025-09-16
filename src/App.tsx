@@ -35,10 +35,10 @@ const App: Component = () => {
     lines().map((_, index) => lines().slice(0, index + 1))
   );
 
-  const getWidth = (lineCount) => {
+  const getWidth = (lineCount, startLineCount) => {
     let widthSum = 0;
 
-    for (let i = 1; i <= lineCount; i++) {
+    for (let i = startLineCount ?? 1; i <= lineCount; i++) {
       widthSum += getTriangleWidth(i);
     }
     widthSum += Math.max((lineCount - 1), 0) * 16;
@@ -135,17 +135,20 @@ const App: Component = () => {
   });
 
   return (
-    <div class="p-8 flex flex-col h-dvh gap-y-16 items-center">
-      <div class="flex gap-x-16 gap-y-8 flex-col md:flex-row max-w-xl">
+    <div class="p-8 pb-2 flex flex-col h-dvh gap-y-8 items-center">
+      <div class="flex gap-x-16 gap-y-8 flex-col md:flex-row max-w-xl mb-8">
       <input onInput={(e) => setInputText(e.target.value)} value={inputText()} class="input input-neutral w-full" /> 
       <button onClick={() => downloadSVG('png')} disabled={downloading() || !lineCount()} class="btn btn-soft btn-primary">
         {downloading() ? 'Downloading...' : 'Download as PNG'}
       </button>
       </div>
       <div class="overflow-x-auto w-full grow">
-        <svg ref={svgRef} width={getWidth(lineCount())} height={getTriangleHeight(lineCount())}>
-          <For each={triangleStages()}>
+        <svg ref={svgRef} width={getWidth(Math.min(lineCount(), 5))} height={lineCount() > 5 ? getTriangleHeight(5) + getTriangleHeight(lineCount()) + 64 : getTriangleHeight(lineCount())}>
+          <For each={triangleStages().slice(0, 5)}>
             {(stageLines, stageIndex) => <Triangle lines={stageLines} x={getWidth(stageIndex()) + Math.min(stageIndex(), 1) * 16} />}
+          </For>
+          <For each={triangleStages().slice(5, 7)}>
+            {(stageLines, stageIndex) => <Triangle lines={stageLines} x={getWidth(stageIndex() ? stageIndex() + 4 : 0, 5) + Math.min(stageIndex(), 1) * 16} y={getTriangleHeight(5) + 64} />}
           </For>
         </svg>
       </div>
