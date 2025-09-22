@@ -1,38 +1,76 @@
 import type { Component } from 'solid-js';
-import { createSignal, createMemo, onMount, createEffect } from "solid-js";
+import { createSignal, createMemo, onMount, createEffect, createResource, on } from "solid-js";
 import Triangle from "./components/Triangle";
 import {triangleFontSize, triangleTopVertexOffset, getTriangleWidth, getTriangleHeight} from "/src/lib/triangle.ts";
 import { toPng } from 'html-to-image';
+import { fontStyle } from "./lib/font.tsx";
+import { createStore, reconcile } from "solid-js/store";
 
 const App: Component = () => {
   let svgRef;
 
   const [inputText, setInputText] = createSignal("");
+  const [inputMode, setInputMode] = createSignal("auto");
+  const [rows, setRows] = createStore([]);
+  const [separator, setSeparator] = createSignal("");
+  const [displayMode, setDisplayMode] = createSignal("single");
+  const [displayStep, setDisplayStep] = createSignal(0);
+
   const [downloading, setDownloading] = createSignal(false);
 
-  const lines = createMemo(() => {
-    const word = inputText().trim().split(" ")[0];
+  const text = createMemo(() => inputText().replace(/\s\s+/g, ' ').trim());
+  const textWords = createMemo(() => text() ? text().split(" ") : []);
 
-    if (!word) {
-      return [];
+  const autoMode = createMemo(() => {
+    const textWordCount = textWords().length;
+    if (!textWordCount) {
+      return null;
+    } else if (textWords().length === 1) {
+      return "word";
+    } else {
+      return "phrase";
     }
-
-    const result = [[{text: word[0], fill: "red"}]];
-    let currentCombined = word[0];
-    for (let i = 1; i < word.length; i++) {
-      const nextChar = word[i];
-      result.push([{text: `${currentCombined}-`}, {text: nextChar, fill: "red"}]);
-      currentCombined += nextChar;
-      result.push([{text: currentCombined, fill: "red"}]);
-    }
-
-    return result;
   });
 
-  const lineCount = createMemo(() => lines().length);
+  const textMode = createMemo(() => {
+    if (inputMode() === "auto") {
+      return autoMode();
+    } else {
+      return inputMode();
+    }
+  });
+
+  const getRowText = (row) => row.map(row => row.text).join(separator());
+
+  createEffect(() => {
+    const words = textWords();
+    const rows = [];
+
+    if (textMode() === "word") {
+      if (words[0]) {
+        const word = words[0];
+        rows.push([{text: word[0], marked: true}]);
+        let previous = word[0];
+        for (let i = 1; i < word.length; i++) {
+          const nextChar = word[i];
+          rows.push([{text: `${previous}-`}, {text: nextChar, marked: true}]);
+          previous += nextChar;
+          rows.push([{text: previous, marked: true}]);
+        }
+      }
+    } else {
+      for (let i = 0; i < words.length; i++) {
+        rows.push(words.slice(0, i + 1).map(word => ({text: `${word} `})));
+      }
+    }
+
+    setRows(reconcile(rows));
+  });
+
+  const lineCount = createMemo(() => rows.length);
 
   const triangleStages = createMemo(() =>
-    lines().map((_, index) => lines().slice(0, index + 1))
+    rows.map((_, index) => rows.slice(0, index + 1))
   );
 
   const getWidth = (lineCount, startLineCount) => {
@@ -50,78 +88,24 @@ const App: Component = () => {
     setDownloading(true);
 
     try {
-      // --- START: NEW CODE ---
-      // 1. Calculate the actual, unscaled dimensions from your reactive properties.
       const svgWidth = getWidth(Math.min(lineCount(), 5));
-      const svgHeight = lineCount() > 5 
-        ? getTriangleHeight(5) + getTriangleHeight(lineCount()) + 64 
+      const svgHeight = lineCount() > 5
+        ? getTriangleHeight(5) + getTriangleHeight(lineCount()) + 64
         : getTriangleHeight(lineCount());
-      
-      // 2. Clone the SVG element to avoid changing the one on screen.
-      const svgClone = svgRef.cloneNode(true);
 
-      // 3. Set the explicit width and height on the clone.
-      //    This is the key step for the rasterizer.
-      svgClone.setAttribute('width', svgWidth);
-      svgClone.setAttribute('height', svgHeight);
+      if (!svgRef) {
+        return;
+      }
 
-      // 4. Remove classes and styles that might interfere with rendering.
-      svgClone.removeAttribute('class');
-      svgClone.removeAttribute('style');
-      // --- END: NEW CODE ---
-
-      // Fetch the font file and convert it to a base64 data URL
-      const fontUrl = 'https://fonts.gstatic.com/s/robotocondensed/v25/ieVi2ZhZI2eCN5jzbjEETS9weq8-33mZKCMSbvNdgg.woff2';
-      const response = await fetch(fontUrl);
-      const blob = await response.blob();
-      const reader = new FileReader();
-      const dataUrl = await new Promise(resolve => {
-        reader.onload = () => resolve(reader.result);
-        reader.readAsDataURL(blob);
+      const dataUrl = await toPng(svgRef, {
+        //width: svgWidth,
+        //height: svgHeight,
       });
 
-      // Create a style element with the font-face and other styles
-      const style = document.createElementNS('http://www.w3.org/2000/svg', 'style');
-      style.textContent = `
-        @font-face {
-          font-family: 'Roboto Condensed';
-          src: url(${dataUrl}) format('woff2');
-        }
-        text {
-          font-family: 'Roboto Condensed', sans-serif;
-          letter-spacing: 0.05em;
-        }
-      `;
+      triggerDownload(dataUrl, `pyramid-${inputText()}.png`);
 
-      // Prepend the style to the SVG
-      svgClone.prepend(style);
-
-      const serializer = new XMLSerializer();
-      let svgString = serializer.serializeToString(svgClone);
-
-      // Remove the style element after serialization to not affect the displayed SVG
-
-      if (format === 'svg') {
-        const blob = new Blob([svgString], { type: "image/svg+xml" });
-        const url = URL.createObjectURL(blob);
-        triggerDownload(url, 'image.svg');
-        URL.revokeObjectURL(url);
-      } else {
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("2d");
-        const img = new Image();
-
-        img.onload = () => {
-          canvas.width = img.width;
-          canvas.height = img.height;
-          ctx.drawImage(img, 0, 0);
-          const dataUrl = canvas.toDataURL(`image/${format}`);
-          triggerDownload(dataUrl, `pyramid-${inputText()}.${format}`);
-        };
-        img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgString)));
-      }
     } catch (error) {
-      console.error('Failed to download SVG:', error);
+      console.error('Failed to download image:', error);
     } finally {
       setDownloading(false);
     }
@@ -132,51 +116,93 @@ const App: Component = () => {
     a.href = url;
     a.download = filename;
     document.body.appendChild(a);
-    a.click();
+  a.click();
     document.body.removeChild(a);
+  };
+
+  createEffect(on(text, (text) => {
+    setDisplayStep(0)
+  }));
+
+  const handleDisplayStep = (step) => {
+    setDisplayMode("single");
+    setDisplayStep(step);
+  };
+
+  const handleDisplayMultiple = () => {
+    setDisplayMode("multi");
+    setDisplayStep(0);
   };
 
   onMount(() => {
     const params = new URLSearchParams(window.location.search);
-    const queryValue = params.get('text') || '';
-    setInputText(queryValue);
+    setInputText(params.get('text') || '');
+    setInputMode(params.get('mode') || 'auto');
 
     createEffect(() => {
-      const currentVal = inputText();
       const url = new URL(window.location.toString());
-      if (currentVal) {
-        url.searchParams.set('text', currentVal);
+      if (text()) {
+        url.searchParams.set('text', text());
       } else {
         url.searchParams.delete('text');
       }
-      window.history.replaceState({}, '', url.toString());
+      if (inputMode() !== "auto") {
+        url.searchParams.set('mode', inputMode());
+      } else {
+        url.searchParams.delete('mode');
+      }
+      window.history.replaceState(null, '', url.toString());
     });
   });
 
   return (
-    <div class="p-8 pb-2 flex flex-col h-dvh gap-y-8 items-center">
-      <div class="flex gap-x-16 gap-y-8 flex-col md:flex-row max-w-xl mb-8">
-      <input onInput={(e) => setInputText(e.target.value)} value={inputText()} class="input input-neutral w-full" /> 
-      <button onClick={() => downloadSVG('png')} disabled={downloading() || !lineCount()} class="btn btn-soft btn-primary">
-        {downloading() ? 'Downloading...' : 'Download as PNG'}
-      </button>
-      </div>
-      <div class="overflow-x-auto w-full grow">
-        <svg ref={svgRef} viewBox={`0 0 ${getWidth(Math.min(lineCount(), 5))} ${lineCount() > 5 ? getTriangleHeight(5) + getTriangleHeight(lineCount()) + 64 : getTriangleHeight(lineCount())}`}
-          class="w-full h-full"
-          style={{
-            'max-width': `${getWidth(Math.min(lineCount(), 5))}px`,
-            'max-height': `${lineCount() > 5 ? getTriangleHeight(5) + getTriangleHeight(lineCount()) + 64 : getTriangleHeight(lineCount())}px`
-          }}>
-          <For each={triangleStages().slice(0, 5)}>
-            {(stageLines, stageIndex) => <Triangle lines={stageLines} x={getWidth(stageIndex()) + Math.min(stageIndex(), 1) * 16} />}
-          </For>
-          <For each={triangleStages().slice(5, 7)}>
-            {(stageLines, stageIndex) => <Triangle lines={stageLines} x={getWidth(stageIndex() ? stageIndex() + 4 : 0, 5) + Math.min(stageIndex(), 1) * 16} y={getTriangleHeight(5) + 64} />}
-          </For>
-        </svg>
-      </div>
-      <div class="w-full flex justify-center"><p>Sponsored by softwarehouse <a href="https://www.cze.tech/contact" target="_blank" class="text-blue-500">RenčiČa</a></p></div>
+    <div class="flex h-dvh flex-col gap-y-8 items-center px-8 pb-2">
+      <main class="grow flex flex-col gap-y-8">
+        <fieldset class="fieldset grid-cols-2 bg-base-200 border-base-300 rounded-box border px-2">
+          <legend class="fieldset-legend">Input</legend>
+          <label class="label">Text</label>
+          <label class="label">Mode</label>
+          <input onInput={(e) => setInputText(e.target.value)} value={inputText()} class="input input-primary col-start-1" />
+          <select class="select select-primary" value={inputMode()} onInput={(e) => setInputMode(e.currentTarget.value)}>
+            <option value="auto">Auto{autoMode() ? ` (${autoMode()})` : null}</option>
+            <option value="word">Word</option>
+            <option value="phrase">Phrase</option>
+          </select>
+        </fieldset>
+        <div class="grow">
+          <div class="flex flex-col gap-y-8">
+            <fieldset class="fieldset bg-base-200 border-base-300 rounded-box border grid-cols-2 gap-y-2 px-2">
+              <legend class="fieldset-legend">Display</legend>
+              <ul class="steps col-span-2">
+                <For each={rows} fallback={<li class="step" style={{"--step-bg": "color-mix(in oklab, var(--color-base-content) 10%, transparent)", "--step-fg": "color-mix(in oklch, var(--color-base-content) 20%, #0000)"}}>…</li>}>
+                  {(row, index) =>
+                    <li class="step" classList={{"step-primary": displayMode() === "single" && (!displayStep() || displayStep() >= index() + 1)}} onClick={() => handleDisplayStep(index() + 1)}>{getRowText(row)}</li>
+                  }
+                </For>
+              </ul>
+              <div class="divider col-span-2" style={{"--divider-m": "0"}}>OR</div>
+              <button disabled class="btn" onClick={handleDisplayMultiple} classList={{"btn-primary": displayMode() === "multi"}}>Multiple</button>
+            </fieldset>
+            <button onClick={() => downloadSVG('png')} disabled={downloading() || !lineCount()} class="btn btn-soft btn-primary">
+              {downloading() ? 'Downloading...' : 'Download as PNG'}
+            </button>
+            <svg ref={svgRef} width={getTriangleWidth(lineCount())} height={getTriangleHeight(lineCount())}
+              style={{
+                'letter-spacing': '0.1em',
+              }}>
+              <style innerHTML={fontStyle} />
+              {/*<For each={triangleStages().slice(0, 5)}>
+                {(stageLines, stageIndex) => <Triangle lines={stageLines} x={getWidth(stageIndex()) + Math.min(stageIndex(), 1) * 16} />}
+              </For>
+              <For each={triangleStages().slice(5, 7)}>
+                {(stageLines, stageIndex) => <Triangle lines={stageLines} x={getWidth(stageIndex() ? stageIndex() + 4 : 0, 5) + Math.min(stageIndex(), 1) * 16} y={getTriangleHeight(5) + 64} />}
+              </For>*/}
+              <Triangle lines={rows} showRowsCount={displayStep} />
+            </svg>
+          </div>
+        </div>
+      </main>
+      <footer class="w-full flex justify-center"><p>Sponsored by softwarehouse <a href="https://www.cze.tech/contact" target="_blank" class="text-blue-500">RenčiČa</a></p></footer>
     </div>
   );
 };

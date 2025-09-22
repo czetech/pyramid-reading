@@ -1,5 +1,6 @@
 import { For } from "solid-js";
-import { createMemo } from "solid-js";
+import { createMemo, createEffect } from "solid-js";
+import { createStore, reconcile } from "solid-js/store";
 
 import {triangleFontSize, triangleTopVertexOffset, getTriangleWidth, getTriangleHeight} from "/src/lib/triangle.ts";
 
@@ -17,7 +18,6 @@ export default function Triangle(props) {
       viewBox={`-1 -1 ${width() + 2} ${height() + 2}`}
       x={props.x}
       y={props.y}
-      style={{"font-family": "Roboto Condensed", "letter-spacing": "0.1em"}}
     >
       <polygon
         points={vertices()}
@@ -26,10 +26,12 @@ export default function Triangle(props) {
         fill="#e0ebff"
       />
 
-      <For each={props.lines}>
+      <For each={props.lines.slice(0, props.showRowsCount() || props.lines.length)}>
         {(line, index) => {
+          JSON.stringify(line)
+
           // Y-coordinate for the bottom line of the current section
-          const lineY = () => (index() + 1) * sectionHeight() + 32;
+          const lineY = () => (index() + 1) * sectionHeight() + triangleTopVertexOffset;
 
           // Y-coordinate for the center of the text within the current section
           const textY = () => lineY() - sectionHeight() / 2 + 4;
@@ -62,7 +64,7 @@ export default function Triangle(props) {
                 font-weight="bold"
               >
                 <For each={line}>
-                {({text, fill}) => <tspan fill={index() + 1 === props.lines.length ? fill : null}>{text}</tspan>}
+                  {(word) => <tspan fill={index() + 1 === (props.showRowsCount() || props.lines.length) && word.marked ? "red" : null}>{word.text}</tspan>}
                 </For>
               </text>
             </>

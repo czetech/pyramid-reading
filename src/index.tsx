@@ -1,7 +1,7 @@
 /* @refresh reload */
 import './index.css';
 import { render } from 'solid-js/web';
-import "@fontsource/roboto-condensed";
+
 
 import App from './App';
 
