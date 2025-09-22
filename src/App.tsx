@@ -157,7 +157,7 @@ const App: Component = () => {
 
   return (
     <div class="flex h-dvh flex-col gap-y-8 items-center px-8 pb-2">
-      <main class="grow flex flex-col gap-y-8">
+      <main class="grow flex flex-col gap-y-8 w-full">
         <fieldset class="fieldset grid-cols-2 bg-base-200 border-base-300 rounded-box border px-2">
           <legend class="fieldset-legend">Input</legend>
           <label class="label">Text</label>
@@ -186,7 +186,9 @@ const App: Component = () => {
             <button onClick={() => downloadSVG('png')} disabled={downloading() || !lineCount()} class="btn btn-soft btn-primary">
               {downloading() ? 'Downloading...' : 'Download as PNG'}
             </button>
-            <svg ref={svgRef} width={getTriangleWidth(displayStep() || lineCount())} height={getTriangleHeight(displayStep() || lineCount())}
+            <div class="flex justify-center max-w-full">
+            <div class="overflow-x-auto w-full">
+            <svg ref={svgRef} width={getTriangleWidth(displayStep() || lineCount())} height={getTriangleHeight(displayStep() || lineCount())} viewbox={`0 0 ${getTriangleWidth(displayStep() || lineCount())} ${getTriangleHeight(displayStep() || lineCount())}`}
               style={{
                 'letter-spacing': '0.1em',
               }}>
@@ -199,6 +201,8 @@ const App: Component = () => {
               </For>*/}
               <Triangle lines={rows} showRowsCount={displayStep} />
             </svg>
+            </div>
+            </div>
           </div>
         </div>
       </main>
