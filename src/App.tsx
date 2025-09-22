@@ -102,7 +102,7 @@ const App: Component = () => {
         //height: svgHeight,
       });
 
-      triggerDownload(dataUrl, `pyramid-${inputText()}.png`);
+      triggerDownload(dataUrl, `pyramid-${text().replaceAll(" ", "_")}.png`);
 
     } catch (error) {
       console.error('Failed to download image:', error);
