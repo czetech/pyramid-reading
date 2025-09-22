@@ -170,7 +170,7 @@ const App: Component = () => {
           </select>
         </fieldset>
         <div class="grow">
-          <div class="flex flex-col gap-y-8">
+          <div class="flex flex-col gap-y-8 items-center">
             <fieldset class="fieldset bg-base-200 border-base-300 rounded-box border grid-cols-2 gap-y-2 px-2">
               <legend class="fieldset-legend">Display</legend>
               <ul class="steps col-span-2">
@@ -186,7 +186,7 @@ const App: Component = () => {
             <button onClick={() => downloadSVG('png')} disabled={downloading() || !lineCount()} class="btn btn-soft btn-primary">
               {downloading() ? 'Downloading...' : 'Download as PNG'}
             </button>
-            <svg ref={svgRef} width={getTriangleWidth(lineCount())} height={getTriangleHeight(lineCount())}
+            <svg ref={svgRef} width={getTriangleWidth(displayStep() || lineCount())} height={getTriangleHeight(displayStep() || lineCount())}
               style={{
                 'letter-spacing': '0.1em',
               }}>

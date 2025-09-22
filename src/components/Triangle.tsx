@@ -6,9 +6,9 @@ import {triangleFontSize, triangleTopVertexOffset, getTriangleWidth, getTriangle
 
 export default function Triangle(props) {
   const lineCount = createMemo(() => props.lines.length);
-  const width = createMemo(() => getTriangleWidth(lineCount()));
-  const height = createMemo(() => getTriangleHeight(lineCount()));
-  const sectionHeight = createMemo(() => (height() - triangleTopVertexOffset) / lineCount());
+  const width = createMemo(() => getTriangleWidth(props.showRowsCount() || lineCount()));
+  const height = createMemo(() => getTriangleHeight(props.showRowsCount() || lineCount()));
+  const sectionHeight = createMemo(() => (height() - triangleTopVertexOffset) / (props.showRowsCount() || lineCount()));
   const vertices = createMemo(() => `${width() / 2},0 0,${height()} ${width()},${height()}`);
 
   return (

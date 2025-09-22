@@ -7,5 +7,6 @@ export const fontStyle = `
   }
   svg {
     font-family: 'Roboto Condensed', sans-serif;
+    word-spacing: 2ch;
   }
 `;
