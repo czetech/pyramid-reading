@@ -19,6 +19,7 @@ const App: Component = () => {
   const [downloading, setDownloading] = createSignal(false);
 
   const [hide, setHide] = createSignal(false);
+  const [hideAll, setHideAll] = createSignal(false);
 
   const text = createMemo(() => inputText().replace(/\s\s+/g, ' ').trim());
   const textWords = createMemo(() => text() ? text().split(" ") : []);
@@ -63,10 +64,14 @@ const App: Component = () => {
     } else {
       for (let i = 0; i < words.length; i++) {
         rows.push(words.slice(0, i + 1).map(word => ({text: `${word} `})));
-        if (hide()) {
+        if (hideAll()) {
           const lastRow = rows[rows.length - 1];
           lastRow[lastRow.length - 1].hide = true;
         }
+      }
+      if (hide()) {
+        const lastRow = rows[rows.length - 1];
+        lastRow[lastRow.length - 1].hide = true;
       }
     }
 
@@ -117,7 +122,7 @@ const App: Component = () => {
     }
   };
 
-  const downloadSVG = () => {
+  const openSVGInNewTab = () => {
     if (!svgRef) {
       return;
     }
@@ -126,11 +131,12 @@ const App: Component = () => {
     const svgString = serializer.serializeToString(svgRef);
     const blob = new Blob([svgString], { type: "image/svg+xml" });
     const url = URL.createObjectURL(blob);
-
-    triggerDownload(url, `pyramid-${text().replaceAll(" ", "_")}.svg`);
-    URL.revokeObjectURL(url);
+    
+    window.open(url, '_blank');
+    
+    // The created URL doesn't need to be revoked immediately, 
+    // as the new tab needs it. The browser will handle it.
   };
-
   const triggerDownload = (url, filename) => {
     const a = document.createElement("a");
     a.href = url;
@@ -203,19 +209,23 @@ const App: Component = () => {
               <div class="divider col-span-2" style={{"--divider-m": "0"}}>OR</div>
               <button disabled class="btn" onClick={handleDisplayMultiple} classList={{"btn-primary": displayMode() === "multi"}}>Multiple</button>
             </fieldset>
-            <fieldset class="fieldset bg-base-200 border-base-300 rounded-box border grid-cols-2 gap-y-2 px-2">
-              <legend class="fieldset-legend">Test options</legend>
+            <fieldset class="fieldset bg-base-200 border-base-300 rounded-box border px-2">
+              <legend class="fieldset-legend">Test options for phrase words hide</legend>
+              <label class="label">
+                <input type="checkbox" checked={hideAll()} onInput={(e) => setHideAll(e.currentTarget.checked)} class="toggle" />
+                Hide last word in each row
+              </label>
               <label class="label">
                 <input type="checkbox" checked={hide()} onInput={(e) => setHide(e.currentTarget.checked)} class="toggle" />
-                Hide last word in phrase
+                Hide last word in last row
                 </label>
             </fieldset>
             <div class="flex gap-x-4">
             <button onClick={() => downloadPNG('png')} disabled={downloading() || !lineCount()} class="btn btn-soft btn-primary">
               {downloading() ? 'Downloading...' : 'Download as PNG'}
             </button>
-            <button onClick={() => downloadSVG()} disabled={!lineCount()} class="btn btn-soft btn-primary">
-              Download as SVG
+            <button onClick={() => openSVGInNewTab()} disabled={!lineCount()} class="btn btn-soft btn-primary">
+              Open as SVG
             </button>
             </div>
             <div class="flex justify-center max-w-full">
