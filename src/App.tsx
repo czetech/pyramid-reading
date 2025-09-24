@@ -84,7 +84,7 @@ const App: Component = () => {
     return widthSum;
   };
 
-  const downloadSVG = async (format) => {
+  const downloadPNG = async (format) => {
     setDownloading(true);
 
     try {
@@ -109,6 +109,20 @@ const App: Component = () => {
     } finally {
       setDownloading(false);
     }
+  };
+
+  const downloadSVG = () => {
+    if (!svgRef) {
+      return;
+    }
+
+    const serializer = new XMLSerializer();
+    const svgString = serializer.serializeToString(svgRef);
+    const blob = new Blob([svgString], { type: "image/svg+xml" });
+    const url = URL.createObjectURL(blob);
+
+    triggerDownload(url, `pyramid-${text().replaceAll(" ", "_")}.svg`);
+    URL.revokeObjectURL(url);
   };
 
   const triggerDownload = (url, filename) => {
@@ -183,9 +197,14 @@ const App: Component = () => {
               <div class="divider col-span-2" style={{"--divider-m": "0"}}>OR</div>
               <button disabled class="btn" onClick={handleDisplayMultiple} classList={{"btn-primary": displayMode() === "multi"}}>Multiple</button>
             </fieldset>
-            <button onClick={() => downloadSVG('png')} disabled={downloading() || !lineCount()} class="btn btn-soft btn-primary">
+            <div class="flex gap-x-4">
+            <button onClick={() => downloadPNG('png')} disabled={downloading() || !lineCount()} class="btn btn-soft btn-primary">
               {downloading() ? 'Downloading...' : 'Download as PNG'}
             </button>
+            <button onClick={() => downloadSVG()} disabled={!lineCount()} class="btn btn-soft btn-primary">
+              Download as SVG
+            </button>
+            </div>
             <div class="flex justify-center max-w-full">
             <div class="overflow-x-auto w-full">
             <svg ref={svgRef} width={getTriangleWidth(displayStep() || lineCount())} height={getTriangleHeight(displayStep() || lineCount())} viewbox={`0 0 ${getTriangleWidth(displayStep() || lineCount())} ${getTriangleHeight(displayStep() || lineCount())}`}
