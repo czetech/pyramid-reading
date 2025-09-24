@@ -12,7 +12,7 @@ const App: Component = () => {
   const [inputText, setInputText] = createSignal("");
   const [inputMode, setInputMode] = createSignal("auto");
   const [rows, setRows] = createStore([]);
-  const [separator, setSeparator] = createSignal("");
+  const [separator, setSeparator] = createSignal(" ");
   const [displayMode, setDisplayMode] = createSignal("single");
   const [displayStep, setDisplayStep] = createSignal(0);
 
@@ -20,6 +20,7 @@ const App: Component = () => {
 
   const [hide, setHide] = createSignal(false);
   const [hideAll, setHideAll] = createSignal(false);
+  const [hideTotal, setHideTotal] = createSignal(false);
 
   const text = createMemo(() => inputText().replace(/\s\s+/g, ' ').trim());
   const textWords = createMemo(() => text() ? text().split(" ") : []);
@@ -63,7 +64,7 @@ const App: Component = () => {
       }
     } else {
       for (let i = 0; i < words.length; i++) {
-        rows.push(words.slice(0, i + 1).map(word => ({text: `${word} `})));
+        rows.push(words.slice(0, i + 1).map(word => ({text: `${word}`, hide: hideTotal()})));
         if (hideAll()) {
           const lastRow = rows[rows.length - 1];
           lastRow[lastRow.length - 1].hide = true;
@@ -212,13 +213,17 @@ const App: Component = () => {
             <fieldset class="fieldset bg-base-200 border-base-300 rounded-box border px-2">
               <legend class="fieldset-legend">Test options for phrase words hide</legend>
               <label class="label">
+                <input type="checkbox" checked={hide()} onInput={(e) => setHide(e.currentTarget.checked)} class="toggle" />
+                Hide last word in last row
+              </label>
+              <label class="label">
                 <input type="checkbox" checked={hideAll()} onInput={(e) => setHideAll(e.currentTarget.checked)} class="toggle" />
                 Hide last word in each row
               </label>
               <label class="label">
-                <input type="checkbox" checked={hide()} onInput={(e) => setHide(e.currentTarget.checked)} class="toggle" />
-                Hide last word in last row
-                </label>
+                <input type="checkbox" checked={hideTotal()} onInput={(e) => setHideTotal(e.currentTarget.checked)} class="toggle" />
+                Hide all words
+              </label>
             </fieldset>
             <div class="flex gap-x-4">
             <button onClick={() => downloadPNG('png')} disabled={downloading() || !lineCount()} class="btn btn-soft btn-primary">

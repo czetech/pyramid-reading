@@ -23,7 +23,7 @@ export default function Triangle(props) {
     svgRef.querySelectorAll('tspan[style*="opacity: 0"]').forEach(tspan => {
     
       const bbox = tspan.getBBox();
-      const paddingForSpace = -10;
+      const paddingForSpace = -4;
       const lineY = bbox.y + bbox.height + 1;
 
       linesToDraw.push({
@@ -91,7 +91,7 @@ export default function Triangle(props) {
                 font-weight="bold"
               >
                 <For each={line}>
-                  {(word) => <tspan fill={index() + 1 === (props.showRowsCount() || props.lines.length) && word.marked ? "red" : null} style={{"opacity": word.hide ? 0 : null, 'letter-spacing': word.hide ? '0.35em' : '0.1em'}}>{word.text}</tspan>}
+                  {(word) => <><tspan fill={index() + 1 === (props.showRowsCount() || props.lines.length) && word.marked ? "red" : null} style={{"opacity": word.hide ? 0 : null, 'letter-spacing': word.hide ? '0.35em' : '0.1em'}}>{word.text}</tspan><tspan> </tspan></>}
                 </For>
               </text>
               <For each={underlineAttrs()}>
