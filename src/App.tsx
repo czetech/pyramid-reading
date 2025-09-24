@@ -18,6 +18,8 @@ const App: Component = () => {
 
   const [downloading, setDownloading] = createSignal(false);
 
+  const [hide, setHide] = createSignal(false);
+
   const text = createMemo(() => inputText().replace(/\s\s+/g, ' ').trim());
   const textWords = createMemo(() => text() ? text().split(" ") : []);
 
@@ -61,6 +63,10 @@ const App: Component = () => {
     } else {
       for (let i = 0; i < words.length; i++) {
         rows.push(words.slice(0, i + 1).map(word => ({text: `${word} `})));
+        if (hide()) {
+          const lastRow = rows[rows.length - 1];
+          lastRow[lastRow.length - 1].hide = true;
+        }
       }
     }
 
@@ -196,6 +202,13 @@ const App: Component = () => {
               </ul>
               <div class="divider col-span-2" style={{"--divider-m": "0"}}>OR</div>
               <button disabled class="btn" onClick={handleDisplayMultiple} classList={{"btn-primary": displayMode() === "multi"}}>Multiple</button>
+            </fieldset>
+            <fieldset class="fieldset bg-base-200 border-base-300 rounded-box border grid-cols-2 gap-y-2 px-2">
+              <legend class="fieldset-legend">Test options</legend>
+              <label class="label">
+                <input type="checkbox" checked={hide()} onInput={(e) => setHide(e.currentTarget.checked)} class="toggle" />
+                Hide last word in phrase
+                </label>
             </fieldset>
             <div class="flex gap-x-4">
             <button onClick={() => downloadPNG('png')} disabled={downloading() || !lineCount()} class="btn btn-soft btn-primary">

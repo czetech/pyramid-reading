@@ -64,7 +64,7 @@ export default function Triangle(props) {
                 font-weight="bold"
               >
                 <For each={line}>
-                  {(word) => <tspan fill={index() + 1 === (props.showRowsCount() || props.lines.length) && word.marked ? "red" : null}>{word.text}</tspan>}
+                  {(word) => <tspan fill={index() + 1 === (props.showRowsCount() || props.lines.length) && word.marked ? "red" : null} style={{"opacity": index() + 1 === (props.showRowsCount() || props.lines.length) && word.hide ? 0 : null}}>{word.text}</tspan>}
                 </For>
               </text>
             </>
