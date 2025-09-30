@@ -221,7 +221,7 @@ const App: Component = () => {
               <button disabled class="btn" onClick={handleDisplayMultiple} classList={{"btn-primary": displayMode() === "multi"}}>Multiple</button>
             </fieldset>
             <fieldset class="fieldset bg-base-200 border-base-300 rounded-box border px-2">
-              <legend class="fieldset-legend">Test options for phrase words hide</legend>
+              <legend class="fieldset-legend">Test options for phrase</legend>
               <label class="label">
                 <input type="checkbox" checked={hide()} onInput={(e) => setHide(e.currentTarget.checked)} class="toggle" />
                 Hide last word in last row
@@ -236,10 +236,10 @@ const App: Component = () => {
               </label>
             </fieldset>
             <fieldset class="fieldset bg-base-200 border-base-300 rounded-box border px-2">
-              <legend class="fieldset-legend">Test gombíček</legend>
+              <legend class="fieldset-legend">Test options for word</legend>
               <label class="label">
                 <input type="checkbox" checked={simplerWord()} onInput={(e) => setSimplerWord(e.currentTarget.checked)} class="toggle" />
-                Simpler words (TODO label)
+                Simpler (without hyphen)
               </label>
             </fieldset>
             <div class="flex gap-x-4">
