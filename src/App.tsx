@@ -12,7 +12,6 @@ const App: Component = () => {
   const [inputText, setInputText] = createSignal("");
   const [inputMode, setInputMode] = createSignal("auto");
   const [rows, setRows] = createStore([]);
-  const [separator, setSeparator] = createSignal(" ");
   const [displayMode, setDisplayMode] = createSignal("single");
   const [displayStep, setDisplayStep] = createSignal(0);
 
@@ -21,6 +20,8 @@ const App: Component = () => {
   const [hide, setHide] = createSignal(false);
   const [hideAll, setHideAll] = createSignal(false);
   const [hideTotal, setHideTotal] = createSignal(false);
+
+  const [simplerWord, setSimplerWord] = createSignal(false);
 
   const text = createMemo(() => inputText().replace(/\s\s+/g, ' ').trim());
   const textWords = createMemo(() => text() ? text().split(" ") : []);
@@ -44,6 +45,8 @@ const App: Component = () => {
     }
   });
 
+  const separator = createMemo(() => textMode() === "phrase" ? " " : "");
+
   const getRowText = (row) => row.map(row => row.text).join(separator());
 
   createEffect(() => {
@@ -53,13 +56,20 @@ const App: Component = () => {
     if (textMode() === "word") {
       if (words[0]) {
         const word = words[0];
-        rows.push([{text: word[0], marked: true}]);
-        let previous = word[0];
-        for (let i = 1; i < word.length; i++) {
-          const nextChar = word[i];
-          rows.push([{text: `${previous}-`}, {text: nextChar, marked: true}]);
-          previous += nextChar;
-          rows.push([{text: previous, marked: true}]);
+        if (simplerWord()) {
+          for (let i = 0; i < word.length; i++) {
+            rows.push([{text: word.slice(0, i + 1)}]);
+          }
+        }
+        else {
+          rows.push([{text: word[0], marked: true}]);
+          let previous = word[0];
+          for (let i = 1; i < word.length; i++) {
+            const nextChar = word[i];
+            rows.push([{text: `${previous}-`}, {text: nextChar, marked: true}]);
+            previous += nextChar;
+            rows.push([{text: previous, marked: true}]);
+          }
         }
       }
     } else {
@@ -225,6 +235,13 @@ const App: Component = () => {
                 Hide all words
               </label>
             </fieldset>
+            <fieldset class="fieldset bg-base-200 border-base-300 rounded-box border px-2">
+              <legend class="fieldset-legend">Test gombíček</legend>
+              <label class="label">
+                <input type="checkbox" checked={simplerWord()} onInput={(e) => setSimplerWord(e.currentTarget.checked)} class="toggle" />
+                Simpler words (TODO label)
+              </label>
+            </fieldset>
             <div class="flex gap-x-4">
             <button onClick={() => downloadPNG('png')} disabled={downloading() || !lineCount()} class="btn btn-soft btn-primary">
               {downloading() ? 'Downloading...' : 'Download as PNG'}
@@ -235,7 +252,7 @@ const App: Component = () => {
             </div>
             <div class="flex justify-center max-w-full">
             <div class="overflow-x-auto w-full">
-            <svg ref={svgRef} width={getTriangleWidth(displayStep() || lineCount())} height={getTriangleHeight(displayStep() || lineCount())} viewbox={`0 0 ${getTriangleWidth(displayStep() || lineCount())} ${getTriangleHeight(displayStep() || lineCount())}`}
+            <svg ref={svgRef} width={getTriangleWidth(displayStep() || lineCount(), textMode())} height={getTriangleHeight(displayStep() || lineCount())} viewbox={`0 0 ${getTriangleWidth(displayStep() || lineCount(), textMode())} ${getTriangleHeight(displayStep() || lineCount())}`}
               style={{
                 'letter-spacing': '0.1em',
               }}>
@@ -246,7 +263,7 @@ const App: Component = () => {
               <For each={triangleStages().slice(5, 7)}>
                 {(stageLines, stageIndex) => <Triangle lines={stageLines} x={getWidth(stageIndex() ? stageIndex() + 4 : 0, 5) + Math.min(stageIndex(), 1) * 16} y={getTriangleHeight(5) + 64} />}
               </For>*/}
-              <Triangle lines={rows} showRowsCount={displayStep} />
+              <Triangle lines={rows} showRowsCount={displayStep} separator={separator} textMode={textMode} />
             </svg>
             </div>
             </div>
