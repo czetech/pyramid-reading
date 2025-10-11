@@ -15,6 +15,8 @@ const App: Component = () => {
   const [displayMode, setDisplayMode] = createSignal("single");
   const [displayStep, setDisplayStep] = createSignal(0);
 
+  const [slope, setSlope] = createSignal(0);
+
   const [downloading, setDownloading] = createSignal(false);
 
   const [hide, setHide] = createSignal(false);
@@ -99,7 +101,7 @@ const App: Component = () => {
     let widthSum = 0;
 
     for (let i = startLineCount ?? 1; i <= lineCount; i++) {
-      widthSum += getTriangleWidth(i);
+      widthSum += getTriangleWidth(i, textMode(), slope());
     }
     widthSum += Math.max((lineCount - 1), 0) * 16;
 
@@ -194,6 +196,7 @@ const App: Component = () => {
 
   return (
     <div class="flex h-dvh flex-col gap-y-8 items-center px-8 pb-2">
+      {slope()}
       <main class="grow flex flex-col gap-y-8 w-full">
         <fieldset class="fieldset grid-cols-2 bg-base-200 border-base-300 rounded-box border px-2">
           <legend class="fieldset-legend">Input</legend>
@@ -221,7 +224,23 @@ const App: Component = () => {
               <button disabled class="btn" onClick={handleDisplayMultiple} classList={{"btn-primary": displayMode() === "multi"}}>Multiple</button>
             </fieldset>
             <fieldset class="fieldset bg-base-200 border-base-300 rounded-box border px-2">
-              <legend class="fieldset-legend">Test options for phrase</legend>
+              <legend class="fieldset-legend">Graphical parameters</legend>
+              <label class="label">Triangle slope</label>
+              <div>
+                <input type="range" min="-3" max="3" value={slope()} onInput={(e) => setSlope(e.currentTarget.value)} class="range" />
+                <div class="flex justify-between px-2.5 mt-2 text-xs">
+                  <span>-3</span>
+                  <span>-2</span>
+                  <span>-1</span>
+                  <span>0</span>
+                  <span>1</span>
+                  <span>2</span>
+                  <span>3</span>
+                </div>
+              </div>
+            </fieldset>
+            <fieldset class="fieldset bg-base-200 border-base-300 rounded-box border px-2">
+              <legend class="fieldset-legend">Test options</legend>
               <label class="label">
                 <input type="checkbox" checked={hide()} onInput={(e) => setHide(e.currentTarget.checked)} class="toggle" />
                 Hide last word in last row
@@ -234,9 +253,6 @@ const App: Component = () => {
                 <input type="checkbox" checked={hideTotal()} onInput={(e) => setHideTotal(e.currentTarget.checked)} class="toggle" />
                 Hide all words
               </label>
-            </fieldset>
-            <fieldset class="fieldset bg-base-200 border-base-300 rounded-box border px-2">
-              <legend class="fieldset-legend">Test options for word</legend>
               <label class="label">
                 <input type="checkbox" checked={simplerWord()} onInput={(e) => setSimplerWord(e.currentTarget.checked)} class="toggle" />
                 Simpler (without hyphen)
@@ -252,7 +268,7 @@ const App: Component = () => {
             </div>
             <div class="flex justify-center max-w-full">
             <div class="overflow-x-auto w-full">
-            <svg ref={svgRef} width={getTriangleWidth(displayStep() || lineCount(), textMode())} height={getTriangleHeight(displayStep() || lineCount())} viewbox={`0 0 ${getTriangleWidth(displayStep() || lineCount(), textMode())} ${getTriangleHeight(displayStep() || lineCount())}`}
+            <svg ref={svgRef} width={getTriangleWidth(displayStep() || lineCount(), textMode(), slope())} height={getTriangleHeight(displayStep() || lineCount())} viewbox={`0 0 ${getTriangleWidth(displayStep() || lineCount(), textMode(), slope())} ${getTriangleHeight(displayStep() || lineCount())}`}
               style={{
                 'letter-spacing': '0.1em',
               }}>
@@ -263,7 +279,7 @@ const App: Component = () => {
               <For each={triangleStages().slice(5, 7)}>
                 {(stageLines, stageIndex) => <Triangle lines={stageLines} x={getWidth(stageIndex() ? stageIndex() + 4 : 0, 5) + Math.min(stageIndex(), 1) * 16} y={getTriangleHeight(5) + 64} />}
               </For>*/}
-              <Triangle lines={rows} showRowsCount={displayStep} separator={separator} textMode={textMode} />
+              <Triangle lines={rows} showRowsCount={displayStep} separator={separator} textMode={textMode} slope={slope} />
             </svg>
             </div>
             </div>

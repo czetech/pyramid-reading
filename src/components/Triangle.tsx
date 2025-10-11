@@ -8,7 +8,7 @@ export default function Triangle(props) {
   let svgRef;
 
   const lineCount = createMemo(() => props.lines.length);
-  const width = createMemo(() => getTriangleWidth(props.showRowsCount() || lineCount(), props.textMode()));
+  const width = createMemo(() => getTriangleWidth(props.showRowsCount() || lineCount(), props.textMode(), props.slope()));
   const height = createMemo(() => getTriangleHeight(props.showRowsCount() || lineCount()));
   const sectionHeight = createMemo(() => (height() - triangleTopVertexOffset) / (props.showRowsCount() || lineCount()));
   const vertices = createMemo(() => `${width() / 2},0 0,${height()} ${width()},${height()}`);
