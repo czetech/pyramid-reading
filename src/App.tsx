@@ -196,7 +196,6 @@ const App: Component = () => {
 
   return (
     <div class="flex h-dvh flex-col gap-y-8 items-center px-8 pb-2">
-      {slope()}
       <main class="grow flex flex-col gap-y-8 w-full">
         <fieldset class="fieldset grid-cols-2 bg-base-200 border-base-300 rounded-box border px-2">
           <legend class="fieldset-legend">Input</legend>
