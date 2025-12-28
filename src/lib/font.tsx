@@ -1,5 +1,5 @@
-import fontDataLatin from "@fontsource/roboto-condensed/files/roboto-condensed-latin-500-normal.woff2?inline";
-import fontDataLatinExt from "@fontsource/roboto-condensed/files/roboto-condensed-latin-ext-500-normal.woff2?inline";
+import fontDataLatin from "@fontsource/roboto-condensed/files/roboto-condensed-latin-400-normal.woff2?inline";
+import fontDataLatinExt from "@fontsource/roboto-condensed/files/roboto-condensed-latin-ext-400-normal.woff2?inline";
 
 export const fontStyle = `
   @font-face {
